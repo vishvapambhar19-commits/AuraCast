@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraCast 3D:Forecast</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050a14;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.2); margin-bottom: 30px; }
+        .header h1 { font-size: 2rem; margin: 0; color: #00aaff; }
+        .header a { color: #ccc; text-decoration: none; font-weight: bold; transition: color 0.3s; margin: 0 10px; }
+        .header a:hover { color: #fff; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(10, 25, 50, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 170, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .value { font-size: 2.5rem; font-weight: 900; color: #00aaff; }
+        .stat-card .label { font-size: 1rem; color: #ccc; margin-top: 5px; }
+        
+        .chart-container {
+            background: rgba(10, 25, 50, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 170, 255, 0.2);
+        }
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .controls h2 { margin: 0; font-size: 1.5rem; }
+        .tabs button {
+            background: transparent;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tabs button.active, .tabs button:hover {
+            background-color: #00aaff;
+            color: #000;
+            border-color: #00aaff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+    <h1>Dynamic Forecast</h1> 
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="live-map.html">Live Map</a>
+        <a href="forecast.html">Forecast</a>
+        <a href="learn.html">Learn & Alerts</a>
+    </nav>
+</header>
+        
+        <section class="stats-grid">
+            <div class="stat-card"><div class="value" id="peak-aqi">0</div><div class="label">Peak Predicted AQI</div></div>
+            <div class="stat-card"><div class="value" id="avg-temp">0°</div><div class="label">Avg. Temperature</div></div>
+            <div class="stat-card"><div class="value" id="best-air">--:--</div><div class="label">Best Air Quality (Est.)</div></div>
+        </section>
+
+        <div class="chart-container">
+            <div class="controls">
+                <h2 id="chart-title">24-Hour Forecast</h2>
+                <div class="tabs">
+                    <button id="btn-aqi" class="active">AQI</button>
+                    <button id="btn-temp">Temperature</button>
+                    <button id="btn-wind">Wind</button>
+                </div>
+            </div>
+            <canvas id="forecastChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        let chart;
+        let fullForecastData;
+
+        function animateValue(element, start, end, duration, suffix = '') {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                element.innerHTML = Math.floor(progress * (end - start) + start) + suffix;
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        async function fetchAndDrawForecast() {
+            const lat = 41.87, lon = -87.62; // Chicago for demo
+            try {
+                const response = await fetch(`/api/predict_aq?lat=${lat}&lon=${lon}`);
+                if (!response.ok) throw new Error('Backend failed');
+                fullForecastData = await response.json();
+                
+                updateStats(fullForecastData);
+                updateChart('aqi');
+            } catch (error) {
+                console.error("Forecast Error:", error);
+                document.getElementById('chart-title').textContent = "Could not load forecast.";
+            }
+        }
+
+        function updateStats(data) {
+            const peakAqi = Math.max(...data.aqi_data);
+            const avgTemp = data.temp_data.reduce((a, b) => a + b, 0) / data.temp_data.length;
+            const bestAqi = Math.min(...data.aqi_data);
+            const bestAqiIndex = data.aqi_data.indexOf(bestAqi);
+            const bestTime = new Date(data.labels[bestAqiIndex]).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+
+            animateValue(document.getElementById('peak-aqi'), 0, peakAqi, 1500);
+            animateValue(document.getElementById('avg-temp'), 0, avgTemp, 1500, '°');
+            document.getElementById('best-air').textContent = bestTime;
+        }
+
+        function updateChart(dataType) {
+            if (!fullForecastData) return;
+
+            document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${dataType}`).classList.add('active');
+
+            let chartData, label, color;
+            switch(dataType) {
+                case 'temp':
+                    chartData = fullForecastData.temp_data;
+                    label = 'Temperature (°C)';
+                    color = 'rgba(255, 159, 64, 1)';
+                    break;
+                case 'wind':
+                    chartData = fullForecastData.wind_data;
+                    label = 'Wind Speed (km/h)';
+                    color = 'rgba(153, 102, 255, 1)';
+                    break;
+                default: // aqi
+                    chartData = fullForecastData.aqi_data;
+                    label = 'Predicted PM2.5 AQI';
+                    color = 'rgba(0, 170, 255, 1)';
+            }
+            
+            const formattedLabels = fullForecastData.labels.map(iso => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }));
+
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: formattedLabels,
+                    datasets: [{
+                        label: label,
+                        data: chartData,
+                        fill: true,
+                        backgroundColor: color.replace('1)', '0.2)'),
+                        borderColor: color,
+                        tension: 0.4
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#ccc' } }, x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#ccc' } } }, plugins: { legend: { labels: { color: '#ccc' } } } }
+            });
+        }
+        
+        document.getElementById('btn-aqi').addEventListener('click', () => updateChart('aqi'));
+        document.getElementById('btn-temp').addEventListener('click', () => updateChart('temp'));
+        document.getElementById('btn-wind').addEventListener('click', () => updateChart('wind'));
+        
+        fetchAndDrawForecast();
+    </script>
+</body>
+</html>

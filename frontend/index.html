@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraCast 3D: Your World's Air, Visualized</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --glow-color: rgba(0, 170, 255, 0.7);
+            --secondary-glow-color: rgba(200, 100, 255, 0.8);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* --- Globe Background --- */
+        #globe-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        /* --- Full Page Overlay --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- Main Content Wrapper --- */
+        main {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- Hero Section --- */
+        .hero-section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hero-text-container {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1.5s ease 0.5s forwards;
+        }
+
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .hero-section h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: -3px;
+            background: -webkit-linear-gradient(45deg, #00aaff, #fff, #c879ff);
+            -webkit-background-clip: text;
+            background-clip: text; 
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-section p {
+            font-size: 1.25rem;
+            margin: 15px 0 30px 0;
+            max-width: 600px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-image: linear-gradient(45deg, #0077ff, #aa00ff);
+            color: #fff;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 25px rgba(170, 0, 255, 0.5);
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 35px rgba(170, 0, 255, 0.7);
+        }
+        
+        /* --- Value Proposition Section --- */
+        .value-prop-section {
+            padding: 100px 5vw;
+            background-color: transparent;
+        }
+        
+        .value-cards-container { 
+            display: flex; 
+            justify-content: center; 
+            gap: 30px; 
+            flex-wrap: wrap; 
+            max-width: 1200px;
+            margin: auto;
+        }
+        .value-card { 
+            background: rgba(10, 10, 10, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 15px; 
+            padding: 30px; 
+            width: 300px;
+            text-align: center;
+            opacity: 0; 
+            transform: translateY(30px); 
+            transition: all 0.6s ease;
+        }
+        .value-prop-section.visible .value-card { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+        .value-prop-section.visible .value-card:nth-child(2) { transition-delay: 0.2s; }
+        .value-prop-section.visible .value-card:nth-child(3) { transition-delay: 0.4s; }
+        .value-card:hover { 
+            transform: translateY(-10px); 
+            border-color: var(--glow-color); 
+            box-shadow: 0 0 30px var(--glow-color); 
+        }
+        .value-card svg { width: 50px; height: 50px; margin-bottom: 20px; color: #00aaff; }
+        .value-card h3 { font-size: 1.5rem; margin-bottom: 10px; }
+        .value-card p { color: #aaa; line-height: 1.6; }
+
+        /* --- Footer --- */
+        .footer { 
+            padding: 40px 5vw; 
+            text-align: center; 
+            background: #0a0a0a;
+            border-top: 1px solid #222;
+        }
+        .footer-nav a { color: #aaa; text-decoration: none; margin: 0 15px; transition: color 0.3s ease; }
+        .footer-nav a:hover { color: #fff; }
+        .footer p { margin-top: 20px; color: #666; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div id="globe-background"></div>
+    <div class="overlay"></div>
+
+    <main>
+        <section class="hero-section">
+            <div class="hero-text-container">
+                <h1>AuraCast 3D</h1>
+                <p>See the Air You Breathe.</p>
+                <a href="live-map.html" class="cta-button">Explore the Live Map</a>
+            </div>
+        </section>
+
+        <section class="value-prop-section">
+            <div class="value-cards-container">
+                <div class="value-card">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8.5 10.5a.5.5 0 0 1-1 0V4.835a2.5 2.5 0 1 1 1 0V10.5z"/><path d="M4.146 4.146a.5.5 0 0 0 .708 0L8 1.207l3.146 3.147a.5.5 0 0 0 .708-.708l-3.5-3.5a.5.5 0 0 0-.708 0l-3.5 3.5a.5.5 0 0 0 0 .708z"/></svg>
+                    <h3>Real-Time Data</h3>
+                    <p>Integrates live satellite, ground, and weather data for unparalleled accuracy.</p>
+                </div>
+                <div class="value-card">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 7.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zm0 2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7z"/></svg>
+                    <h3>AI-Powered Insights</h3>
+                    <p>Get personalized health advice and simple explanations powered by Google's Gemini AI.</p>
+                </div>
+                 <div class="value-card">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+                    <h3>Global Coverage</h3>
+                    <p>Search any city or use your real-time location to check air quality anywhere on Earth.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <nav class="footer-nav">
+            <a href="live-map.html">Live Map</a>
+            <a href="#">Data Explorer (Coming Soon)</a>
+            <a href="#">Learn More (Coming Soon)</a>
+        </nav>
+        <p>&copy; 2025 AuraCast 3D. Data sources cited on Live Map.</p>
+    </footer>
+
+    <!-- Three.js for background -->
+    <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js" } }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+
+        let scene, camera, renderer, globe, stars, atmosphere;
+        const clock = new THREE.Clock();
+
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            // Initial camera position is close for the zoom-in effect
+            camera.position.z = 7;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('globe-background').appendChild(renderer.domElement);
+
+            // --- Starfield ---
+            const starGeometry = new THREE.BufferGeometry();
+            const starVertices = [];
+            for (let i = 0; i < 15000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = (Math.random() - 0.5) * 2000;
+                starVertices.push(x, y, z);
+            }
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.02 });
+            stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+
+            // --- Lighting ---
+            const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+            sun.position.set(-10, 5, 10);
+            scene.add(sun);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+
+            // --- Globe ---
+            const textureLoader = new THREE.TextureLoader();
+            // Using a more reliable texture source and adding an error fallback
+            const globeTexture = textureLoader.load(
+                'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+                undefined, // onLoad callback not needed
+                undefined, // onProgress callback not needed
+                (error) => {
+                    // This function is called if the texture fails to load
+                    console.error('Globe texture failed to load, applying fallback color.', error);
+                    // If the texture fails, we create a new basic material with a solid color
+                    globe.material = new THREE.MeshPhongMaterial({ color: 0x2a5d9e, shininess: 10 });
+                }
+            );
+            
+            const globeGeometry = new THREE.SphereGeometry(5, 64, 64);
+            const globeMaterial = new THREE.MeshPhongMaterial({
+                map: globeTexture,
+                shininess: 10
+            });
+            globe = new THREE.Mesh(globeGeometry, globeMaterial);
+            scene.add(globe); 
+            camera.lookAt(globe.position); // Ensure camera is looking at the center of the globe
+
+            // --- Atmosphere ---
+            const atmosphereMaterial = new THREE.ShaderMaterial({
+                vertexShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        float intensity = pow(0.6 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+                        gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
+                    }
+                `,
+                side: THREE.BackSide,
+                blending: THREE.AdditiveBlending,
+                transparent: true
+            });
+            atmosphere = new THREE.Mesh(new THREE.SphereGeometry(5.3, 64, 64), atmosphereMaterial);
+            scene.add(atmosphere); // The atmosphere is also added at (0, 0, 0) to wrap the globe
+
+            // --- Event Listeners & Observers ---
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('scroll', onScroll, { passive: true });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.2 });
+            observer.observe(document.querySelector('.value-prop-section'));
+
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onScroll() {
+            const scrollY = window.scrollY;
+            
+            // --- Camera Zoom Effect ---
+            const zoomDistance = window.innerHeight; // Full zoom effect over the first screen scroll
+            const scrollPercent = Math.min(scrollY / zoomDistance, 1);
+            const startZoom = 7; // Matches the initial camera position
+            const endZoom = 20; // How far out we want to zoom
+            camera.position.z = THREE.MathUtils.lerp(startZoom, endZoom, scrollPercent);
+
+            // --- Text Animation on Scroll ---
+            const heroText = document.querySelector('.hero-text-container');
+            if (heroText) {
+                // Fade out the text over the first 50% of a screen scroll
+                const fadeEndScroll = window.innerHeight * 0.5;
+                const textOpacity = 1 - Math.min(scrollY / fadeEndScroll, 1);
+                heroText.style.opacity = textOpacity;
+
+                // Move the text up as the user scrolls
+                heroText.style.transform = `translateY(${scrollY * -0.3}px)`;
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+            globe.rotation.y = elapsedTime * 0.1;
+            stars.rotation.y = elapsedTime * 0.01;
+
+            renderer.render(scene, camera);
+        }
+
+        init3D();
+
+    </script>
+</body>
+</html>
+
