@@ -411,7 +411,7 @@
         const panelHandle = document.getElementById('panel-handle');
         const layersBtn = document.getElementById('layers-btn');
         const layersMenu = document.getElementById('layers-menu');
-        
+
         // --- Map & State Variables ---
         let map;
         let dotsLayer = null;
@@ -463,7 +463,7 @@
             currentCoords = { lat, lon };
 
             try {
-                const response = await fetch(`/api/air_data?lat=${lat}&lon=${lon}`);
+              const response = await fetch(`https://auracast.onrender.com/api/air_data?lat=${lat}&lon=${lon}`);
                 if (!response.ok) {
                     throw new Error(`Backend fetch failed: ${response.statusText}`);
                 }
@@ -485,7 +485,9 @@
 
         async function callGeminiAPI(prompt) { 
             try {
-                const response = await fetch('/api/gemini_insight', {
+                const response = await fetch('https://auracast.onrender.com/api/gemini_insight', {
+
+                
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt })
@@ -603,7 +605,6 @@
                 if (dotsLayer && map.hasLayer(dotsLayer)) map.removeLayer(dotsLayer);
             }
         }
-        
         function flyToLocation(lat, lon) {
             if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
                 console.error("flyToLocation called with invalid coordinates:", lat, lon);
@@ -641,13 +642,10 @@
             const result = await callGeminiAPI(prompt);
             document.getElementById('gemini-result').textContent = result;
         }
-
         // --- Start the Application ---
         init();
     </script>
 </body>
-
 </html>
 </body>
-
 </html>
