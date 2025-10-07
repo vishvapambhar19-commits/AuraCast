@@ -17,7 +17,7 @@
 
 ## 🚀 Live Demo
 
-> ## [**Click Here to Launch the Live AuraCast Application**](https://auracast-frontend.onrender.com)
+> ## [**Click Here to Launch the Live AuraCast Application**](https://auracast.onrender.com)
 >
 > *(Note: The free backend may take 30-50 seconds to "wake up" on the first visit.)*
 
